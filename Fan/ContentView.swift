@@ -9,24 +9,26 @@
 import SwiftUI
 
 struct ContentView: View {
+    
     @State var speed = 0.1
     @State var timer = Timer.publish(every: 500, on: .main, in: .default).autoconnect()
     @State var angle: Double = 0
     @State var shouldAnimate = false
-    @State var ani = Animation.linear
+    @State var currentAnimation = Animation.linear
     
     var body: some View {
         VStack(spacing: 0) {
             Spacer()
+            
             ZStack {
-                Circle()
+                Circle() // Large circle over the wings
                     .stroke(Color.green, lineWidth: 10)
                     .frame(width: 270, height: 270)
-                Fan()
+                Fan() // Rotor with wings. Rotating part.
                     .fill(Color.green)
                     .frame(width: 250, height: 250)
                     .rotationEffect(shouldAnimate ? .degrees(angle) : .degrees(0))
-                    .animation(ani.speed(speed))
+                    .animation(currentAnimation.speed(speed)) // .repeatForever(autoreverses: false) is not working as expected. So went with timer and adding angle manually
                     .onAppear(perform: {
                         self.shouldAnimate = true
                     })
@@ -34,16 +36,19 @@ struct ContentView: View {
                         self.angle += 90
                     }
             }
-            Capsule(style: .continuous)
+            
+            Capsule(style: .continuous) // Vertical bar which is between fan rotor and control buttons
                 .fill(Color.green)
                 .frame(width: 20, height: 150)
                 .offset(x: 0, y: -5)
                 .zIndex(-1)
-            HStack(spacing: 10) {
-                Button(action: {
+            
+            HStack(spacing: 10) { // Fan control buttons
+                
+                Button(action: { // Stop button
                     self.timer.upstream.connect().cancel()
                     self.speed = 0.2 / self.speed
-                    self.ani = Animation.spring()
+                    self.currentAnimation = Animation.spring() // Changing animation type to get the smooth stopping animation and to obey physics 😅
                 }) {
                     Text("S")
                         .bold()
@@ -54,10 +59,10 @@ struct ContentView: View {
                 .background(Color.red)
                 .mask(Circle())
                 
-                Button(action: {
+                Button(action: { // Low speed button
                     self.timer = Timer.publish(every: 0.2, on: .main, in: .default).autoconnect()
                     self.speed = 0.2
-                    self.ani = Animation.linear
+                    self.currentAnimation = Animation.linear
                 }) {
                     Text("L")
                         .font(.headline)
@@ -66,10 +71,11 @@ struct ContentView: View {
                 .frame(width: 44, height: 44)
                 .background(Color.blue)
                 .mask(Circle())
-                Button(action: {
+                
+                Button(action: { // Medium speed button
                     self.timer = Timer.publish(every: 0.05, on: .main, in: .default).autoconnect()
                     self.speed = 0.05
-                    self.ani = Animation.linear
+                    self.currentAnimation = Animation.linear
                 }) {
                     Text("M")
                         .font(.headline)
@@ -78,10 +84,11 @@ struct ContentView: View {
                 .frame(width: 44, height: 44)
                 .background(Color.blue)
                 .mask(Circle())
-                Button(action: {
+                
+                Button(action: { // High speed button
                     self.timer = Timer.publish(every: 0.02, on: .main, in: .default).autoconnect()
                     self.speed = 0.02
-                    self.ani = Animation.linear
+                    self.currentAnimation = Animation.linear
                 }) {
                     Text("H")
                         .font(.headline)
@@ -102,13 +109,14 @@ struct ContentView: View {
     
 }
 
-struct ContentView_Previews: PreviewProvider {
+struct ContentView_Previews: PreviewProvider { // Preview might not work. Build and run to get some air from fan.
     static var previews: some View {
         ContentView()
     }
 }
 
-struct Fan: Shape {
+
+struct Fan: Shape { // Fan rotor(rotating part)
     
     func path(in rect: CGRect) -> Path {
         var path = Path()
@@ -132,7 +140,8 @@ struct Fan: Shape {
     }
 }
 
-struct Wing: Shape {
+
+struct Wing: Shape { // Fan wings
     
     func path(in rect: CGRect) -> Path {
         var path = Path()
